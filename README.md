@@ -16,11 +16,11 @@ Un pipeline Microsoft Fabric Data Factory qui confie son calcul à un Eventhouse
 
 Le pipeline `PL_Pulse_Express` après une exécution réussie : deux activités KQL, la copie vers l'Eventhouse, le Lookup en KQL, puis la condition qui choisit entre l'alerte et le « tout va bien » dans Teams.
 
-![PL_Pulse_Express dans Fabric, exécution réussie](images/pipeline_run.png)
+![PL_Pulse_Express dans Fabric, exécution réussie](images/fppl2.png)
 
 La table `turbine_health` interrogée dans l'ensemble de requêtes KQL de l'Eventhouse : six éoliennes, 144 relevés chacune, deux en alerte. EOL-02 pour la température de son multiplicateur, EOL-04 pour ses vibrations.
 
-![Le résultat de la requête sur turbine_health](images/kql_results.png)
+![Le résultat de la requête sur turbine_health](images/fppl1.png)
 
 ## 🎯 Résultats clés
 
@@ -171,8 +171,8 @@ fabric-pipeline-express-6/
 ├── data/                               la télémétrie et les commandes KQL
 └── images/
     ├── pipeline_diagram.svg            le schéma du pipeline
-    ├── pipeline_run.png                PL_Pulse_Express après une exécution réussie
-    └── kql_results.png                 la table turbine_health dans l'Eventhouse
+    ├── fppl1.png                       la table turbine_health dans l'Eventhouse
+    └── fppl2.png                       PL_Pulse_Express après une exécution réussie
 ```
 
 ## 🧰 Stack technique
