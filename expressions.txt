@@ -1,0 +1,38 @@
+EXPRESSIONS ET COMMANDES DU GUIDE : copiez-les depuis ce fichier, un bloc entier à la fois.
+Un PDF coupe les lignes longues et ajoute des espaces au copier-coller ; ce fichier n'en ajoute aucun.
+
+=== PL_Pulse_Express ===
+
+[Reset table] KQL, commande (texte simple, sur plusieurs lignes)
+.execute database script <|
+.create-merge table telemetry (ts:datetime, turbine:string, wind_ms:real, power_kw:long, rotor_rpm:real, gearbox_temp_c:real, vibration_mms:real)
+.clear table telemetry data
+
+[Score turbines] KQL, commande (à coller dans « Ajouter du contenu dynamique »)
+.set-or-replace turbine_health <|
+let z = todouble('@{pipeline().libraryVariables.z_threshold}');
+let tl = todouble('@{pipeline().libraryVariables.temp_limit}');
+let s = telemetry | summarize mu = avg(vibration_mms), sd = stdev(vibration_mms) by turbine;
+telemetry
+| join kind=inner s on turbine
+| summarize readings = count(), energy_mwh = round(sum(power_kw) / 6000.0, 2), avg_wind = round(avg(wind_ms), 1), max_temp = max(gearbox_temp_c), vib_anomalies = countif(abs(vibration_mms - mu) / sd > z) by turbine
+| extend status = iff(vib_anomalies >= 3 or max_temp > tl, "ALERTE", "OK")
+
+[Read health] Lookup, requête KQL
+turbine_health
+| summarize alerts = countif(status == "ALERTE"), turbines = count(), energy_mwh = round(sum(energy_mwh), 1), names = strcat_array(array_sort_asc(make_list_if(turbine, status == "ALERTE")), ", ")
+
+[Any alert] If Condition, expression
+@greater(activity('Read health').output.firstRow.alerts, 0)
+
+[Post alert] Teams, message (branche True)
+Alerte parc éolien : @{activity('Read health').output.firstRow.alerts} éolienne(s) à inspecter : @{activity('Read health').output.firstRow.names}. Production du jour : @{activity('Read health').output.firstRow.energy_mwh} MWh.
+
+[Post all clear] Teams, message (branche False)
+Parc éolien : @{activity('Read health').output.firstRow.turbines} éoliennes en ordre de marche. Production du jour : @{activity('Read health').output.firstRow.energy_mwh} MWh.
+
+=== EH_Pulse : vérification dans un ensemble de requêtes KQL ===
+
+telemetry | count
+
+turbine_health | order by turbine asc
